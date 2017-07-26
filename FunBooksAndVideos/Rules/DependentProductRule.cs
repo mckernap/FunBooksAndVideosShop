@@ -26,18 +26,11 @@ namespace FunBooksAndVideos.Rules
         }
         public override PurchaseOrder Apply(PurchaseOrder purchaseOrder)
         {
-            PurchaseOrder po = new PurchaseOrder();
-            po = _purchaseOrder;
+            PurchaseOrder po = new PurchaseOrder(_purchaseOrder);
             Product video = (Product)_productRepository.Get(4); // Basic First Aid Training
             po.LineItems = po.LineItems.Concat(new[] { video }).ToList();
-
-            purchaseOrder.CustomerId = po.CustomerId;
-            purchaseOrder.DateOrdered = po.DateOrdered;
-            purchaseOrder.LineItems = po.LineItems;
-            purchaseOrder.PurchaseOrderId = po.PurchaseOrderId;
-            purchaseOrder.Total = po.Total;
-
-            return purchaseOrder;
+            purchaseOrder.Assign(po);
+            return po;
         }
     }
 }

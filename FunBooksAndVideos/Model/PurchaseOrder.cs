@@ -13,5 +13,20 @@ namespace FunBooksAndVideos.Model
         public double Total { get; set; }
         public DateTime DateOrdered { get; set; }
         public IEnumerable<BaseProduct> LineItems { get; set; }
+        public PurchaseOrder()
+        {
+        }
+        public PurchaseOrder(PurchaseOrder rhs)
+        {
+            Assign(rhs);
+        }
+
+        public void Assign(PurchaseOrder rhs)
+        {
+            this.CustomerId = rhs.CustomerId;
+            this.LineItems = new List<BaseProduct>(rhs.LineItems);
+            this.PurchaseOrderId = rhs.PurchaseOrderId;
+            this.Total = rhs.Total;
+        }
     }
 }
