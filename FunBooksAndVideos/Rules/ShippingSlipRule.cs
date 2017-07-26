@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace FunBooksAndVideos.Rules
 {
-    class ShippingSlipRule : AbstractBaseRule<Result>
+    public class ShippingSlipRule : AbstractBaseRule<Result>
     {
         private readonly PurchaseOrder _purchaseOrder;
         private readonly IShippingSlip2 _shippingSlip;

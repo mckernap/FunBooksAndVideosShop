@@ -19,7 +19,6 @@ namespace FunBooksAndVideos.Tests
         private const string _site = "/bin/scripts/";
         private string _documentLocation = string.Concat(_url, _site);
 
-        private FlexRuleEngineImp _engine;
         private ProductRepository _productRepository;
         private Mock<ICustomerRepository> _customerRepository;
         private ShippingSlipDocFactory _shippingSlipFactory2;
@@ -90,13 +89,12 @@ namespace FunBooksAndVideos.Tests
         public void test_creation_of_shipping_slip_if_physical_product_is_purchased()
         {
             var purchaseOrder = CreatePurchaseOrder(_video1);
-            var result = new Result();
-            _engine = new FlexRuleEngineImp(result,
-                                            purchaseOrder,
-                                            _customerRepository.Object,
-                                            _shippingSlipFactory2,
-                                            _productRepository);
-            result = _engine.Run();
+
+            var rules = new List<AbstractBaseRule<Result>>();
+            rules.Add(new MembershipRule(purchaseOrder, _customerRepository.Object));
+            rules.Add(new ShippingSlipRule(purchaseOrder, _shippingSlipFactory2));
+            var engine = new FlexRuleEngineImp<Result>(rules);
+            var result = engine.Run();
             Assert.That(result.OutputItem, Is.EqualTo(_documentLocation));
         }
 
@@ -104,26 +102,20 @@ namespace FunBooksAndVideos.Tests
         public void test_shipping_slip_is_not_created_if_no_physical_product_is_purchased()
         {
             var purchaseOrder = CreatePurchaseOrder(_videoMembership);
-            var result = new Result();
-            _engine = new FlexRuleEngineImp(result,
-                                            purchaseOrder,
-                                            _customerRepository.Object,
-                                            _shippingSlipFactory2,
-                                            _productRepository);
-            result = _engine.Run();
+            var rules = new List<AbstractBaseRule<Result>>();
+            rules.Add(new ShippingSlipRule(purchaseOrder, _shippingSlipFactory2));
+            var engine = new FlexRuleEngineImp<Result>(rules);
+            var result = engine.Run();
             Assert.That(result.OutputItem, Is.Null);
         }
         [Test]
         public void test_no_membership_is_created()
         {
             var purchaseOrder = CreatePurchaseOrder(_book1);
-            var result = new Result();
-            _engine = new FlexRuleEngineImp(result,
-                                            purchaseOrder,
-                                            _customerRepository.Object,
-                                            _shippingSlipFactory2,
-                                            _productRepository);
-            result = _engine.Run();
+            var rules = new List<AbstractBaseRule<Result>>();
+            rules.Add(new MembershipRule(purchaseOrder, _customerRepository.Object));
+            var engine = new FlexRuleEngineImp<Result>(rules);
+            var result = engine.Run();
 
             _customerRepository.Verify(customers => customers.ActivateMembership(_customerId, _bookMembership), Times.Never);
             _customerRepository.Verify(customers => customers.ActivateMembership(_customerId, _videoMembership), Times.Never);
@@ -134,13 +126,10 @@ namespace FunBooksAndVideos.Tests
         public void test_creation_of_book_membership()
         {
             var purchaseOrder = CreatePurchaseOrder(_book1, _book2, _bookMembership);
-            var result = new Result();
-            _engine = new FlexRuleEngineImp(result,
-                                            purchaseOrder,
-                                            _customerRepository.Object,
-                                            _shippingSlipFactory2,
-                                            _productRepository);
-            result = _engine.Run();
+            var rules = new List<AbstractBaseRule<Result>>();
+            rules.Add(new MembershipRule(purchaseOrder, _customerRepository.Object));
+            var engine = new FlexRuleEngineImp<Result>(rules);
+            var result = engine.Run();
 
             _customerRepository.Verify(customers => customers.ActivateMembership(_customerId, _bookMembership));
             _customerRepository.Verify(customers => customers.ActivateMembership(_customerId, _videoMembership), Times.Never);
@@ -151,13 +140,10 @@ namespace FunBooksAndVideos.Tests
         public void test_creation_of_premium_membership()
         {
             var purchaseOrder = CreatePurchaseOrder(_video1, _book2, _premiumMembership);
-            var result = new Result();
-            _engine = new FlexRuleEngineImp(result,
-                                            purchaseOrder,
-                                            _customerRepository.Object,
-                                            _shippingSlipFactory2,
-                                            _productRepository);
-            result = _engine.Run();
+            var rules = new List<AbstractBaseRule<Result>>();
+            rules.Add(new MembershipRule(purchaseOrder, _customerRepository.Object));
+            var engine = new FlexRuleEngineImp<Result>(rules);
+            var result = engine.Run();
 
             _customerRepository.Verify(customers => customers.ActivateMembership(_customerId, _bookMembership), Times.Never);
             _customerRepository.Verify(customers => customers.ActivateMembership(_customerId, _videoMembership), Times.Never);
@@ -168,13 +154,10 @@ namespace FunBooksAndVideos.Tests
         public void test_creation_of_video_membership()
         {
             var purchaseOrder = CreatePurchaseOrder(_video1, _videoMembership);
-            var result = new Result();
-            _engine = new FlexRuleEngineImp(result,
-                                            purchaseOrder,
-                                            _customerRepository.Object,
-                                            _shippingSlipFactory2,
-                                            _productRepository);
-            result = _engine.Run();
+            var rules = new List<AbstractBaseRule<Result>>();
+            rules.Add(new MembershipRule(purchaseOrder, _customerRepository.Object));
+            var engine = new FlexRuleEngineImp<Result>(rules);
+            var result = engine.Run();
 
             _customerRepository.Verify(customers => customers.ActivateMembership(_customerId, _bookMembership), Times.Never);
             _customerRepository.Verify(customers => customers.ActivateMembership(_customerId, _videoMembership));
@@ -185,13 +168,10 @@ namespace FunBooksAndVideos.Tests
         public void test_creation_of_video_and_book_membership()
         {
             var purchaseOrder = CreatePurchaseOrder(_videoMembership, _bookMembership);
-            var result = new Result();
-            _engine = new FlexRuleEngineImp(result,
-                                            purchaseOrder,
-                                            _customerRepository.Object,
-                                            _shippingSlipFactory2,
-                                            _productRepository);
-            result = _engine.Run();
+            var rules = new List<AbstractBaseRule<Result>>();
+            rules.Add(new MembershipRule(purchaseOrder, _customerRepository.Object));
+            var engine = new FlexRuleEngineImp<Result>(rules);
+            var result = engine.Run();
 
             _customerRepository.Verify(customers => customers.ActivateMembership(_customerId, _bookMembership));
             _customerRepository.Verify(customers => customers.ActivateMembership(_customerId, _videoMembership));
@@ -205,12 +185,10 @@ namespace FunBooksAndVideos.Tests
             _productRepository.AddRange(products);
 
             var purchaseOrder = CreatePurchaseOrder(_video_with_dependencies);
-            _engine = new FlexRuleEngineImp(new Result(),
-                                            purchaseOrder,
-                                            _customerRepository.Object,
-                                            _shippingSlipFactory2,
-                                            _productRepository);
-            var result = _engine.RunPurchaseOrder();
+            var rules = new List<AbstractBaseRule<PurchaseOrder>>();
+            rules.Add(new DependentProductRule(purchaseOrder, _productRepository));
+            var engine = new FlexRuleEngineImp<PurchaseOrder>(rules);
+            var result = engine.Run();
 
             CollectionAssert.Contains(result.LineItems, _video1);
         }

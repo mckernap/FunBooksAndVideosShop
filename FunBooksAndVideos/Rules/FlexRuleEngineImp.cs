@@ -1,44 +1,23 @@
-﻿using FunBooksAndVideos.Model;
-using FunBooksAndVideos.Repositories;
-using FunBooksAndVideos.Shipping;
+﻿using System.Collections.Generic;
 
 namespace FunBooksAndVideos.Rules
 {
-    public class FlexRuleEngineImp
+    public class FlexRuleEngineImp<T> where T : class, new()
     {
-        private readonly Result _result;
-        private readonly PurchaseOrder _purchaseOrder;
-        private readonly ICustomerRepository _customerRepository;
-        private readonly IShippingSlip2 _shippingSlipFactory;
-        private readonly ProductRepository _productRepository;
+        IEnumerable<AbstractBaseRule<T>> _rules;
 
-        public FlexRuleEngineImp(Result result,
-                                 PurchaseOrder purchaseOrder,
-                                 ICustomerRepository customerRepository,
-                                 IShippingSlip2 shippingSlipFactory,
-                                 ProductRepository productRepository)
+        public FlexRuleEngineImp(IEnumerable<AbstractBaseRule<T>> rules)
         {
-            _result = result;
-            _purchaseOrder = purchaseOrder;
-            _customerRepository = customerRepository;
-            _shippingSlipFactory = shippingSlipFactory;
-            _productRepository = productRepository;
+            _rules = rules;
         }
 
-        public PurchaseOrder RunPurchaseOrder()
+        public T Run()
         {
-            _purchaseOrder.ApplyRule(new DependentProductRule(_productRepository));
-
-            return _purchaseOrder;
-        }
-
-        public Result Run()
-        {
-            _result
-                .ApplyRule(new MembershipRule(_purchaseOrder, _customerRepository))
-                .ApplyRule(new ShippingSlipRule(_purchaseOrder, _shippingSlipFactory));
-
-            return _result;
+            T serviceInterface = (new T());
+            foreach (var rule in _rules)
+                serviceInterface.ApplyRule(rule);
+           
+            return serviceInterface;
         }
     }
 }
